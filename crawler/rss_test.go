@@ -16,6 +16,24 @@ type Info struct {
 	title, describle, content string
 }
 
+func TestXmlParser(tt *testing.T) {
+	rule := &XmlRule{
+		ParentNode:      "//channel/item",
+		TitleNode:       "//title",
+		DescriptionNode: "//description",
+		ContentNode:     "//content:encode",
+		LinkNode:        "//link",
+		DateNode:        "//pubDate",
+	}
+	resp, err := http.Get("https://coolshell.cn/feed")
+	if err != nil {
+		fmt.Println("fuck")
+	}
+	defer resp.Body.Close()
+	result := XmlAnalyser(resp.Body, rule)
+	fmt.Println(result)
+}
+
 func TestXml(tt *testing.T) {
 	resp, err := http.Get("https://coolshell.cn/feed")
 	if err != nil {
