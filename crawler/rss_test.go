@@ -31,7 +31,16 @@ func TestXmlParser(tt *testing.T) {
 	}
 	defer resp.Body.Close()
 	result := XmlAnalyser(resp.Body, rule)
-	fmt.Println(result)
+	for _, val := range result {
+		if val != nil {
+			fmt.Println("================")
+			fmt.Println(val.Title)
+			fmt.Println(val.Link)
+			fmt.Println(val.Date)
+			fmt.Println(val.Content)
+			fmt.Println("================")
+		}
+	}
 }
 
 func TestXml(tt *testing.T) {
