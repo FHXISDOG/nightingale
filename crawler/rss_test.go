@@ -21,7 +21,7 @@ func TestXmlParser(tt *testing.T) {
 		ParentNode:      "//channel/item",
 		TitleNode:       "//title",
 		DescriptionNode: "//description",
-		ContentNode:     "//content:encode",
+		ContentNode:     "//content:encoded",
 		LinkNode:        "//link",
 		DateNode:        "//pubDate",
 	}
@@ -37,7 +37,7 @@ func TestXmlParser(tt *testing.T) {
 			fmt.Println(val.Title)
 			fmt.Println(val.Link)
 			fmt.Println(val.Date)
-			fmt.Println(val.Content)
+			// fmt.Println(val.Content)
 			fmt.Println("================")
 		}
 	}

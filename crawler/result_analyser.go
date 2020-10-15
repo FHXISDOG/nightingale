@@ -24,6 +24,7 @@ func XmlAnalyser(source io.Reader, rule *XmlRule) []*ParseResult {
 		fmt.Println("parse xml error", err)
 	}
 	fmt.Println(*rule)
+	fmt.Println(rule.ContentNode)
 	parentNode := xmlquery.Find(doc, rule.ParentNode)
 	for _, val := range parentNode {
 		title := val.SelectElement(rule.TitleNode).InnerText()
