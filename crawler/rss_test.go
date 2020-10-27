@@ -16,6 +16,8 @@ type Info struct {
 	title, describle, content string
 }
 
+var msg ParseResult = make(chan ParseResult, 5)
+
 func TestXmlParser(tt *testing.T) {
 	rule := &XmlRule{
 		ParentNode:      "//channel/item",

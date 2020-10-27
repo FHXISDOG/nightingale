@@ -23,8 +23,6 @@ func XmlAnalyser(source io.Reader, rule *XmlRule) []*ParseResult {
 	if err != nil {
 		fmt.Println("parse xml error", err)
 	}
-	fmt.Println(*rule)
-	fmt.Println(rule.ContentNode)
 	parentNode := xmlquery.Find(doc, rule.ParentNode)
 	for _, val := range parentNode {
 		title := val.SelectElement(rule.TitleNode).InnerText()
@@ -42,4 +40,32 @@ func XmlAnalyser(source io.Reader, rule *XmlRule) []*ParseResult {
 		})
 	}
 	return result
+}
+
+// put msg in chan
+func addChanMsg(ch chan *ParseResult, val *Node, rule *XmlRule) {
+	title := val.SelectElement(rule.TitleNode).InnerText()
+	description := val.SelectElement(rule.DescriptionNode).InnerText()
+	content := val.SelectElement(rule.ContentNode).InnerText()
+	link := val.SelectElement(rule.LinkNode).InnerText()
+	date := val.SelectElement(rule.DateNode).InnerText()
+
+	ch <- &ParseResult{
+		Title:       title,
+		Content:     content,
+		Description: description,
+		Date:        date,
+		Link:        link,
+	}
+}
+
+func XmlAnalyserWithChan(source io.Reader, rule *XmlRule, ch chan *ParseResult) {
+	doc, err := xmlquery.Parse(source)
+	if err != nil {
+		fmt.Println("parse xml error", err)
+	}
+	parentNode := xmlquery.Find(doc, rule.ParentNode)
+	for _, val := range parentNode {
+		go addChanMsg(ch, val, rule)
+	}
 }
