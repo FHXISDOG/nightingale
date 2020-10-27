@@ -3,54 +3,32 @@ package crawler
 import (
 	"fmt"
 	"io"
+	"net/http"
 
 	"github.com/antchfx/xmlquery"
 )
 
+// resulr of after analyse
 type ParseResult struct {
 	Title, Author, Description, Content, Link, Source string
 	Date                                              string
 }
 
+// rule of rss source
 type XmlRule struct {
 	ParentNode, TitleNode, DescriptionNode, ContentNode, LinkNode, DateNode string
+	Url                                                                     string
 }
 
-// parse xml
-func XmlAnalyser(source io.Reader, rule *XmlRule) []*ParseResult {
-	result := make([]*ParseResult, 100)
-	doc, err := xmlquery.Parse(source)
-	if err != nil {
-		fmt.Println("parse xml error", err)
-	}
-	parentNode := xmlquery.Find(doc, rule.ParentNode)
-	for _, val := range parentNode {
-		title := val.SelectElement(rule.TitleNode).InnerText()
-		description := val.SelectElement(rule.DescriptionNode).InnerText()
-		content := val.SelectElement(rule.ContentNode).InnerText()
-		link := val.SelectElement(rule.LinkNode).InnerText()
-		date := val.SelectElement(rule.DateNode).InnerText()
-
-		result = append(result, &ParseResult{
-			Title:       title,
-			Content:     content,
-			Description: description,
-			Date:        date,
-			Link:        link,
-		})
-	}
-	return result
-}
-
-// put msg in chan
-func addChanMsg(ch chan *ParseResult, val *Node, rule *XmlRule) {
+// convert rss content to my result
+func (rule *XmlRule) GetResult(val *xmlquery.Node) *ParseResult {
 	title := val.SelectElement(rule.TitleNode).InnerText()
 	description := val.SelectElement(rule.DescriptionNode).InnerText()
 	content := val.SelectElement(rule.ContentNode).InnerText()
 	link := val.SelectElement(rule.LinkNode).InnerText()
 	date := val.SelectElement(rule.DateNode).InnerText()
 
-	ch <- &ParseResult{
+	return &ParseResult{
 		Title:       title,
 		Content:     content,
 		Description: description,
@@ -59,13 +37,29 @@ func addChanMsg(ch chan *ParseResult, val *Node, rule *XmlRule) {
 	}
 }
 
-func XmlAnalyserWithChan(source io.Reader, rule *XmlRule, ch chan *ParseResult) {
-	doc, err := xmlquery.Parse(source)
+// http get rss content
+func (rule *XmlRule) RequestRss() io.ReadCloser {
+	url := rule.Url
+	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Println("parse xml error", err)
+		fmt.Println("http error !!!")
 	}
+	return resp.Body
+}
+
+func (rule *XmlRule) GenerateResult(outChan chan *ParseResult) {
+	source := rule.RequestRss()
+	defer source.Close()
+	doc, _ := xmlquery.Parse(source)
 	parentNode := xmlquery.Find(doc, rule.ParentNode)
+
+	contentLen := len(parentNode)
+
 	for _, val := range parentNode {
-		go addChanMsg(ch, val, rule)
+		go func(v *xmlquery.Node) {
+			result := rule.GetResult(v)
+			outChan <- result
+			finishLenCh <- 1
+		}(val)
 	}
 }
