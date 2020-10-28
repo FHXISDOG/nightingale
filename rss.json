@@ -1,0 +1,28 @@
+[
+    {
+        "ParentNode": "//channel/item",
+        "TitleNode": "//title",
+        "DescriptionNode": "//description",
+        "ContentNode": "//content:encoded",
+        "LinkNode": "//link",
+        "DateNode": "//pubDate",
+        "HttpRule": {
+            "Url": "https://coolshell.cn/feed",
+            "CanPage": false,
+            "RequestMethod": 0
+        }
+    },
+    {
+        "ParentNode": "//entry",
+        "TitleNode": "//title",
+        "DescriptionNode": "//summary",
+        "ContentNode": "//content",
+        "LinkNode": "//link",
+        "DateNode": "//published",
+        "HttpRule": {
+            "Url": "http://www.ruanyifeng.com/blog/atom.xml",
+            "CanPage": false,
+            "RequestMethod": 0
+        }
+    }
+]

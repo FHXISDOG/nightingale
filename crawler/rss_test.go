@@ -1,8 +1,10 @@
 package crawler
 
 import (
+	"encoding/json"
 	"fmt"
-	"net/http"
+	"io/ioutil"
+	"os"
 	"testing"
 )
 
@@ -20,46 +22,48 @@ func generateRule() *XmlRule {
 		ContentNode:     "//content:encoded",
 		LinkNode:        "//link",
 		DateNode:        "//pubDate",
-		Url:             "https://coolshell.cn/feed",
+		Rule: &Rule{
+			Url:           "https://coolshell.cn/feed",
+			CanPage:       false,
+			RequestMethod: GET,
+		},
 	}
 	return rule
 }
 
-func printRssContent(val *ParseResult) {
-	fmt.Println("================")
-	fmt.Println(val.Title)
-	fmt.Println(val.Link)
-	fmt.Println(val.Date)
-	// fmt.Println(val.Content)
-	fmt.Println("================")
-}
-func TestXmlParserChan(t *testing.T) {
-
-}
-
-func TestXmlParser(tt *testing.T) {
-	rule := &XmlRule{
-		ParentNode:      "//channel/item",
-		TitleNode:       "//title",
-		DescriptionNode: "//description",
-		ContentNode:     "//content:encoded",
-		LinkNode:        "//link",
-		DateNode:        "//pubDate",
-	}
-	resp, err := http.Get("https://coolshell.cn/feed")
+func getRuleFromFile(path string) []XmlRule {
+	file, err := os.Open("/Users/finger/code/mycode/nightingale/rss.json")
 	if err != nil {
-		fmt.Println("fuck")
+		fmt.Println(err)
 	}
-	defer resp.Body.Close()
-	result := XmlAnalyser(resp.Body, rule)
-	for _, val := range result {
-		if val != nil {
-			fmt.Println("================")
-			fmt.Println(val.Title)
-			fmt.Println(val.Link)
-			fmt.Println(val.Date)
-			// fmt.Println(val.Content)
-			fmt.Println("================")
-		}
+	defer file.Close()
+	res := make([]XmlRule, 0)
+	byteValue, _ := ioutil.ReadAll(file)
+	json.Unmarshal(byteValue, &res)
+	return res
+}
+
+func TestXmlParserChan(t *testing.T) {
+	rules := getRuleFromFile("/Users/finger/code")
+	resultCh := make(chan *ParseResult, 2)
+	for _, val := range rules {
+		go val.GenerateResult(resultCh)
+	}
+	for val := range resultCh {
+		fmt.Println(val)
 	}
 }
+
+// test json file to struct
+// func TestReadJson(t *testing.T) {
+// 	file, err := os.Open("/Users/finger/code/mycode/nightingale/rss.json")
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
+// 	defer file.Close()
+// 	res := make([]XmlRule, 0)
+// 	byteValue, _ := ioutil.ReadAll(file)
+// 	fmt.Println(string(byteValue))
+// 	json.Unmarshal(byteValue, &res)
+// 	fmt.Println(res)
+// }
