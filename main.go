@@ -1,6 +1,10 @@
 package main
 
-import "github.com/gin-gonic/gin"
+import (
+	"mycode/nightingale/service"
+
+	"github.com/gin-gonic/gin"
+)
 
 func main() {
 	r := gin.Default()
@@ -10,6 +14,8 @@ func main() {
 			"messgae": "pong",
 		})
 	})
+
+	r.GET("/test", service.GetMsg)
 
 	r.Run()
 }

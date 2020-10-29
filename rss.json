@@ -9,7 +9,7 @@
         "HttpRule": {
             "Url": "https://coolshell.cn/feed",
             "CanPage": false,
-            "RequestMethod": 0
+            "RequestMethod": 1
         }
     },
     {
@@ -22,7 +22,7 @@
         "HttpRule": {
             "Url": "http://www.ruanyifeng.com/blog/atom.xml",
             "CanPage": false,
-            "RequestMethod": 0
+            "RequestMethod": 1
         }
     }
 ]

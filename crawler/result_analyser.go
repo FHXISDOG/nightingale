@@ -43,6 +43,7 @@ func (val ParseResult) String() string {
 	res += val.Title + "\n"
 	res += val.Link + "\n"
 	res += val.Date + "\n"
+	res += val.Description + "\n"
 	res += "===========================\n"
 	return res
 }
@@ -83,6 +84,7 @@ func (rule *XmlRule) RequestRss(initMsg *HttpInitMsg) io.ReadCloser {
 	case GET:
 		resp, err = http.Get(url)
 	case POST:
+		//todo handle post request
 		fmt.Println("UNKNOWN REQUEST METHOD")
 	default:
 		fmt.Println("UNKNOWN REQUEST METHOD")

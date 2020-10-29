@@ -32,7 +32,7 @@ func generateRule() *XmlRule {
 }
 
 func getRuleFromFile(path string) []XmlRule {
-	file, err := os.Open("/Users/finger/code/mycode/nightingale/rss.json")
+	file, err := os.Open(path)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -44,26 +44,12 @@ func getRuleFromFile(path string) []XmlRule {
 }
 
 func TestXmlParserChan(t *testing.T) {
-	rules := getRuleFromFile("/Users/finger/code")
+	rules := getRuleFromFile("/Users/finger/code/mycode/nightingale/rss.json")
 	resultCh := make(chan *ParseResult, 2)
-	for _, val := range rules {
-		go val.GenerateResult(resultCh)
+	for i := range rules {
+		go rules[i].GenerateResult(resultCh)
 	}
 	for val := range resultCh {
 		fmt.Println(val)
 	}
 }
-
-// test json file to struct
-// func TestReadJson(t *testing.T) {
-// 	file, err := os.Open("/Users/finger/code/mycode/nightingale/rss.json")
-// 	if err != nil {
-// 		fmt.Println(err)
-// 	}
-// 	defer file.Close()
-// 	res := make([]XmlRule, 0)
-// 	byteValue, _ := ioutil.ReadAll(file)
-// 	fmt.Println(string(byteValue))
-// 	json.Unmarshal(byteValue, &res)
-// 	fmt.Println(res)
-// }
