@@ -2,7 +2,6 @@ package crawler
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/antchfx/xmlquery"
@@ -74,9 +73,12 @@ func (rule *XmlRule) GetResult(val *xmlquery.Node) *ParseResult {
 		Link:        link,
 	}
 }
+func (rule *XmlRule) GeneratePageMsg(page int, httpMsg *HttpInitMsg) {
+
+}
 
 // http get rss content
-func (rule *XmlRule) RequestRss(initMsg *HttpInitMsg) io.ReadCloser {
+func (rule *XmlRule) RequestRss(initMsg *HttpInitMsg) []*xmlquery.Node {
 	url := initMsg.Url
 	var resp *http.Response
 	var err error
@@ -92,31 +94,47 @@ func (rule *XmlRule) RequestRss(initMsg *HttpInitMsg) io.ReadCloser {
 	if err != nil {
 		fmt.Println("http error !!!")
 	}
-	return resp.Body
+	source := resp.Body
+	defer source.Close()
+	doc, _ := xmlquery.Parse(source)
+	parentNode := xmlquery.Find(doc, rule.ParentNode)
+	return parentNode
 }
 
-func (rule *XmlRule) GenerateResult(outChan chan *ParseResult) {
+// loop generate http request msg
+func (rule *XmlRule) GenerateParentchan() chan []*xmlquery.Node {
+	ch := make(chan []*xmlquery.Node)
 	initMsg := rule.generateHttpInitmsg()
-	canPage := rule.CanPage
-	var page int
-	if canPage {
-		page = rule.InitPage
-	}
-	for {
-		source := rule.RequestRss(initMsg)
-		defer source.Close()
-		doc, _ := xmlquery.Parse(source)
-		parentNode := xmlquery.Find(doc, rule.ParentNode)
-
-		for _, val := range parentNode {
-			result := rule.GetResult(val)
-			outChan <- result
+	page := rule.InitPage
+	go func() {
+		for {
+			ch <- rule.RequestRss(initMsg)
+			if !rule.CanPage {
+				close(ch)
+				break
+			}
+			page++
+			rule.GeneratePageMsg(page, initMsg)
 		}
+	}()
+	return ch
+}
 
-		if !canPage {
-			break
+func (rule *XmlRule) GenerateMsgChan() chan *ParseResult {
+	ch := make(chan *ParseResult)
+	go func() {
+		parentCh := rule.GenerateParentchan()
+		for {
+			parentNode, ok := <-parentCh
+			if !ok {
+				close(ch)
+				break
+			}
+			for _, val := range parentNode {
+				ch <- rule.GetResult(val)
+			}
 		}
-		page++
-		rule.generateNextpage(initMsg, page)
-	}
+		fmt.Println("generate msg chan stop")
+	}()
+	return ch
 }

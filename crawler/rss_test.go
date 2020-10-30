@@ -45,11 +45,42 @@ func getRuleFromFile(path string) []XmlRule {
 
 func TestXmlParserChan(t *testing.T) {
 	rules := getRuleFromFile("/Users/finger/code/mycode/nightingale/rss.json")
-	resultCh := make(chan *ParseResult, 2)
-	for i := range rules {
-		go rules[i].GenerateResult(resultCh)
+	resultCh := make(chan *ParseResult, 10)
+	flagCh := make(chan int, len(rules))
+	aliveCh := len(rules)
+	for _, val := range rules {
+		go func(r XmlRule) {
+			ch := r.GenerateMsgChan()
+			for {
+				as, ok := <-ch
+				if !ok {
+					flagCh <- 1
+					break
+				}
+				resultCh <- as
+			}
+		}(val)
 	}
-	for val := range resultCh {
-		fmt.Println(val)
+
+	for {
+		select {
+		case <-flagCh:
+			aliveCh--
+			if aliveCh <= 0 {
+				flagCh = nil
+				close(resultCh)
+			}
+		case val, ok := <-resultCh:
+			if !ok {
+				goto END
+			}
+			fmt.Println(val)
+		}
 	}
+END:
+	fmt.Println("all stop!!")
+}
+
+func TestCloseChan(t *testing.T) {
+	fmt.Println("hh")
 }
