@@ -16,8 +16,8 @@ func main() {
 	})
 
 	r.GET("/tt", BaseFun(service.GetMsg))
-	r.GET("/mm", BaseFun(service.RuleFindAll))
-	r.GET("/msg/:id", BaseFun(service.FindRuleMsg))
+	r.GET("/rule", BaseFun(service.RuleFindAll))
+	r.GET("/msg/:id", BaseFun(service.GetRuleMsg))
 	r.Run()
 }
 

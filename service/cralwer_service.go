@@ -77,7 +77,7 @@ func FindAllRule(c *gin.Context) interface{} {
 	return my_mongo.GetAllRule()
 }
 
-func FindRuleMsg(c *gin.Context) interface{} {
+func GetRuleMsg(c *gin.Context) interface{} {
 	id := c.Param("id")
 	objectID, _ := primitive.ObjectIDFromHex(id)
 	rule := my_mongo.FindOne(bson.M{"_id": objectID})
